@@ -104,7 +104,7 @@
             // Handle incoming operations
             function receive_message(msg) {
                 console.log(`Incoming message: ${msg.origin}`);
-                let origin = `${window.location.protocol}//onlineencryption.browsersecrets.restograde.com`;
+                let origin = `${window.location.protocol}//offlineencryption.browsersecrets.restograde.com`;
                 if(msg.origin === origin) {
                     let response = {
                         id: msg.data.id,
