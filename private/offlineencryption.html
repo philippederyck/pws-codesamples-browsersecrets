@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            let cryptoBox = null;
+
+            // Initialize the key and store some encrypted data
+            // Since we need a password, initialization must be triggered by an incoming message
+            function init_cryptobox(initkey) {
+                // Initialize a closure that only exposes operations
+                cryptoBox = function() {
+                    window.crypto.subtle.importKey(
+                        "raw",
+                        new TextEncoder().encode(initkey),
+                        {name: "PBKDF2"},
+                        false,
+                        ["deriveKey"]
+                    )
+                    .then(
+                        (passwordKey) => {
+                            return window.crypto.subtle.deriveKey(
+                                {
+                                    name: "PBKDF2",
+                                    salt: window.crypto.getRandomValues(new Uint8Array(16)),
+                                    iterations: 100000,
+                                    hash: "SHA-256"
+                                },
+                                passwordKey,
+                                {
+                                    name: "AES-GCM",
+                                    length: 256
+                                },
+                                true,
+                                ["encrypt", "decrypt"]
+                            )
+                        },
+                        (error) => {
+                        }
+                    )
+                    .then(
+                        (cryptoKey) => { 
+                            key = cryptoKey; 
+
+                            // Store initial encrypted data
+                            cryptoBox.encrypt("treasure!").then((encryptedData) => {
+                                localStorage.setItem("secret", encryptedData);
+                                console.log("Successfully stored initial encrypted data");
+                            });
+                        },
+                        (error) => { 
+                            console.error(`Failed to load CryptoKey: ${error}`)
+                        }
+                    );
+
+
+                    // Create the operations we expose
+                    return {
+                        encrypt: function(data) {
+                            let iv = window.crypto.getRandomValues(new Uint8Array(12));
+                            let encodedText = new TextEncoder().encode(data);
+
+                            return window.crypto.subtle.encrypt({
+                                    name: "AES-GCM",
+                                    iv: iv
+                                },
+                                key,
+                                encodedText)
+                            .then(
+                                (encryptedData) => {
+                                    let encryptedBytes = new Uint8Array(encryptedData);
+                                    let encryptedBase64 = window.base64js.fromByteArray(encryptedBytes);
+                                    return window.base64js.fromByteArray(iv) + "." + encryptedBase64;
+                                },
+                                (error) => {
+                                    throw error;
+                                });
+                        },
+                        decrypt: function(data) {
+                            let b64Iv = data.split(".")[0]
+                            let b64Data = data.split(".")[1];
+                            let iv = window.base64js.toByteArray(b64Iv);
+                            let encryptedBytes = window.base64js.toByteArray(b64Data);
+
+                            return window.crypto.subtle.decrypt({
+                                    name: "AES-GCM",
+                                    iv: iv
+                                },
+                                key,
+                                encryptedBytes)
+                            .then(
+                                (decryptedData) => {
+                                    let decryptedBytes = new Uint8Array(decryptedData);
+                                    return new TextDecoder("utf-8").decode(decryptedBytes);
+                                },
+                                (error) => {
+                                    throw error;
+                                }
+                            )
+                        }
+                    }
+                }();
+            }
+    
+            // Handle incoming operations
+            function receive_message(msg) {
+                console.log(`Incoming message: ${msg.origin}`);
+                let origin = `${window.location.protocol}//onlineencryption.browsersecrets.restograde.com`;
+                if(msg.origin === origin) {
+                    let response = {
+                        id: msg.data.id,
+                        result: "Unknown error"
+                    }
+                    
+                    if(msg.data.operation === 'initkey') {
+                        init_cryptobox(msg.data.initkey);
+                    }
+                    else if(msg.data.operation === 'hash') {
+                        if(cryptoBox == null) {
+                            // Cryptobox is not initialized, ask for the user's password
+                            response.result = "Password needed";
+                            response.operation = "initkey";
+                            msg.source.postMessage(response, msg.origin);
+                        }
+                        else {
+                            let encryptedSecret = localStorage.getItem('secret');
+                            if(encryptedSecret != null) {
+                                cryptoBox.decrypt(encryptedSecret).then((secret) => {
+                                    response.result = `Calculated the hash of the secret in localStorage: ${sha256(secret)}`;
+                                    msg.source.postMessage(response, msg.origin);
+                                })
+                            }
+                            else {
+                                response.result = "No secret found";
+                                msg.source.postMessage(response, msg.origin);
+                            }
+                        }
+                    }
+                    else {
+                        response.result = "Unknown operation";
+                        msg.source.postMessage(response, msg.origin);
+                    }
+                }
+            }
+            
+            window.addEventListener("message", receive_message);
+        </script>    
+
+        <!-- Load helper scripts (We could also implement this with the Web Crypto API) -->
+        <script src="//cdn.browsersecrets.restograde.com/cdn/sha256.min.js"></script>
+        <script src="//cdn.browsersecrets.restograde.com/cdn/base64js.min.js"></script>
+    </head>
+</html>

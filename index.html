@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    </head>
+    <body class="container mt-3">
+        <h1 class="text-center">Secure data storage in the browser</h1>
+
+        <div class="row">
+            <div class="col-12 mt-5">
+                <p class="lead">
+                    This page contains various code examples for the scenarios in the security cheat sheet on <a href="https://cheatsheets.pragmaticwebsecurity.com/browsersecrets.html" target="_blank" rel="noopener">Secure data storage in the browser</a>. The source code is <a href="https://github.com/philippederyck/pws-codesamples-browsersecrets" target="_blank" rel="noopener">available on GitHub</a>.
+                </p>
+                <p class="lead">
+                    Below, you can find links to the individual scenarios. You can also find links to malicious pages that attempt to steal data from the storage area. They abuse an XSS vulnerability in an error page running in the same origin as the scenario.
+                </p>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-12">
+                <table class="table">
+                    <thead>
+                        <tr class="text-center">
+                            <th scope="col">Scenario page</th>
+                            <th scope="col">Pro</th>
+                            <th scope="col">Con</th>
+                            <th scope="col">Malicious page</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">
+                                <a href="//localstorage.browsersecrets.restograde.com/scenario-localstorage/index.html" target="_blank" rel="noopener">
+                                    Storing data in localStorage
+                                </a>
+                            </th>
+                            <td>
+                                <ul>
+                                    <li>Easily accessible long-term storage</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                    <li>All script code running within the origin can access the data</li>
+                                    <li>Legitimate code has no exclusive control over the data</li>
+                                    <li>Data is stored in plaintext on the file system</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <a href="//browsersecrets.maliciousfood.com/malicious/localstorage.html" target="_blank" rel="noopener">Open malicious page</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <a href="//sessionstorage.browsersecrets.restograde.com/scenario-localstorage/index.html" target="_blank" rel="noopener">
+                                    Storing data in sessionStorage
+                                </a>
+                            </th>
+                            <td>
+                                <ul>
+                                    <li>Easily accessible short-term storage</li>
+                                    <li>Data access is limited to code running within the set of browsing contexts</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                    <li>Legitimate code has no exclusive control over the data</li>
+                                    <li>Data is stored in plaintext on the file system</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <a href="//browsersecrets.maliciousfood.com/malicious/sessionstorage.html" target="_blank" rel="noopener">Open malicious page</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <a href="//isolatedstorage.browsersecrets.restograde.com/scenario-localstorage/index.html" target="_blank" rel="noopener">
+                                    Origin-isolated data storage
+                                </a>
+                            </th>
+                            <td>
+                                <ul>
+                                    <li>Origin-based isolation is suited for storing sensitive data</li>
+                                    <li>The API can enforce origin-based access control</li>
+                                    <li>The absence of third-party code ensures full control over the data</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                    <li>Data is stored in plaintext on the file system</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <a href="//browsersecrets.maliciousfood.com/malicious/isolatedstorage.html" target="_blank" rel="noopener">Open malicious page</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <a href="//onlineencryption.browsersecrets.restograde.com/scenario-localstorage/index.html" target="_blank" rel="noopener">
+                                    Encrypted data storage with a server-provided key
+                                </a>
+                            </th>
+                            <td>
+                                <ul>
+                                    <li>Origin-based isolation is suited for storing sensitive data</li>
+                                    <li>The API can enforce origin-based access control</li>
+                                    <li>The absence of third-party code ensures full control over the data</li>
+                                    <li>Data is stored encrypted on the file system</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                    <li>Requires the application to be online, so it can retrieve the user-specific key from the server</li>
+                                </ul>
+                            </td>
+                            <td>
+                               <em>This scenario uses the same storage mechanism as Origin-isolated data storage</em>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <a href="//offlineencryption.browsersecrets.restograde.com/scenario-localstorage/index.html" target="_blank" rel="noopener">
+                                    Encrypted data storage with a user-provided password
+                                </a>
+                            </th>
+                            <td>
+                                <ul>
+                                    <li>Origin-based isolation is suited for storing sensitive data</li>
+                                    <li>The API can enforce origin-based access control</li>
+                                    <li>The absence of third-party code ensures full control over the data</li>
+                                    <li>Data is stored encrypted on the file system</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                    <li>Requires the user to enter a password once to encrypt and decrypt data</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <em>This scenario uses the same storage mechanism as Origin-isolated data storage</em>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        
+        <script src="//cdn.browsersecrets.restograde.com/cdn/sha256.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body>
+</html>

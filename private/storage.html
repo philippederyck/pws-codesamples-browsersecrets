@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            // Store some data
+            function init() {
+                localStorage.setItem("secret", "treasure!");
+            }
+        
+            document.addEventListener("DOMContentLoaded", init);
+
+            // Handle incoming operations
+            function receive_message(msg) {
+                console.log(`Incoming message: ${msg.origin}`);
+                let origin = `${window.location.protocol}//isolatedstorage.browsersecrets.restograde.com`;
+                if(msg.origin === origin) {
+                    let response = {
+                        id: msg.data.id,
+                        result: "Unknown error"
+                    }
+                    
+                    if(msg.data.operation === 'hash') {
+                        let secret = localStorage.getItem('secret');
+                        if(secret != null) {
+                            response.result = `Calculated the hash of the secret in localStorage: ${sha256(secret)}`;
+                        }
+                        else {
+                            response.result = "No secret found";
+                        }
+                    }
+                    else {
+                        response.result = "Unknown operation";
+                    }
+                    
+                    msg.source.postMessage(response, msg.origin);
+                }
+            }
+            
+            window.addEventListener("message", receive_message);
+        </script>    
+
+        <!-- Load helper scripts (We could also implement this with the Web Crypto API) -->
+        <script src="//cdn.browsersecrets.restograde.com/cdn/sha256.min.js"></script>
+    </head>
+</html>

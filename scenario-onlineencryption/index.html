@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    </head>
+    <body class="container mt-3">
+        <h1 class="text-center">Scenario - LocalStorage with origin isolation and online encryption</h1>
+
+        <div class="row">
+            <div class="col-12 text-center mt-5">
+                <p>
+                    Clicking the button below instructs the application to perform an operation based on the secret it has stored. In this example, we simply calculate the hash of the secret. Imagine this to be more elaborate application functionality that relies on the secret.
+                </p>
+                <button class="btn btn-primary" onclick="perform_operation()">Perform operation</button>
+            </div>
+            
+            <div class="col-12 text-center mt-5">
+                <p>
+                    Clicking the button below calls a JavaScript function provided by a third-party library. This library is hosted on a CDN and has been compromised by the attacker. Executing the code also executes (harmless) malicious code.
+                </p>
+                <button class="btn btn-primary" onclick="show_cookie_warning()">Show Cookie Warning</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 text-center mt-5">
+                <p class="lead">
+                    This scenario illustrates a pattern of storing data in the browser. For more context, please refer to the security cheat sheet on <a href="https://cheatsheets.pragmaticwebsecurity.com/browsersecrets.html" target="_blank" rel="noopener">Secure data storage in the browser</a>
+                </p>
+            </div>
+        </div>
+
+        <iframe width="0" height="0" id="storageContainer" src="//private.browsersecrets.restograde.com/private/onlineencryption.html"></iframe>
+
+        <script>
+            function receive_message(msg) {
+                console.log(msg);
+                let origin = `${window.location.protocol}//private.browsersecrets.restograde.com`;
+                if(msg.origin === origin) {
+                    let text = `Result (operation ID: ${msg.data.id}): ${msg.data.result}`;
+                    alert(text);
+                }                
+            }
+            window.addEventListener("message", receive_message);
+
+            // Perform an operation with the stored data
+            function perform_operation() {
+                let iframe = $("#storageContainer")[0];
+                let origin = `${window.location.protocol}//private.browsersecrets.restograde.com`;
+                let data = {
+                    id: Math.random().toString(36).substring(7),
+                    operation: 'hash'
+                };
+
+                iframe.contentWindow.postMessage(data, origin);
+            }
+        </script>
+        
+        <!-- Load a script from a CDN which may have been compromised -->
+        <script src="//cdn.browsersecrets.restograde.com/cdn/cookiewarning.js"></script>
+
+        <!-- Load helper scripts (We could also implement this with the Web Crypto API) -->
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body>
+</html>
+
+
