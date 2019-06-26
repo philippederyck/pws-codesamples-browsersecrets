@@ -43,7 +43,7 @@
             function perform_operation() {
                 let secret = sessionStorage.getItem('secret');
                 if(secret != null) {
-                    let msg = `Calculated the hash of the secret in localStorage: ${sha256(secret)}`;
+                    let msg = `Calculated the hash of the secret in sessionStorage: ${sha256(secret)}`;
                     alert(msg);
                 }
                 else {
